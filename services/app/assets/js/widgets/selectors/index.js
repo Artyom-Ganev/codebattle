@@ -2,6 +2,7 @@ import _ from 'lodash';
 import userTypes from '../config/userTypes';
 import GameStatusCodes from '../config/gameStatusCodes';
 import EditorModes from '../config/editorModes';
+import EditorThemes from '../config/editorThemes';
 import i18n from '../../i18n';
 import { makeEditorTextKey } from '../reducers';
 import defaultEditorHeight from '../config/editorSettings';
@@ -16,7 +17,7 @@ export const firstPlayerSelector = state => _
 export const secondPlayerSelector = state => _
   .find(gamePlayersSelector(state), { type: userTypes.secondPlayer });
 
-export const opponentPlayerSelector = (state) => {
+export const opponentPlayerSelector = state => {
   const currentUserId = currentUserIdSelector(state);
   return _.find(gamePlayersSelector(state), ({ id }) => (id !== currentUserId));
 };
@@ -24,7 +25,7 @@ export const opponentPlayerSelector = (state) => {
 const editorsMetaSelector = state => state.editor.meta;
 const editorTextsSelector = state => state.editor.text;
 
-export const editorDataSelector = playerId => (state) => {
+export const editorDataSelector = playerId => state => {
   const meta = editorsMetaSelector(state)[playerId];
   const editorTexts = editorTextsSelector(state);
   if (!meta) {
@@ -37,17 +38,17 @@ export const editorDataSelector = playerId => (state) => {
   };
 };
 
-export const firstEditorSelector = (state) => {
+export const firstEditorSelector = state => {
   const playerId = firstPlayerSelector(state).id;
   return editorDataSelector(playerId)(state);
 };
 
-export const secondEditorSelector = (state) => {
+export const secondEditorSelector = state => {
   const playerId = secondPlayerSelector(state).id;
   return editorDataSelector(playerId)(state);
 };
 
-export const leftEditorSelector = (state) => {
+export const leftEditorSelector = state => {
   const currentUserId = currentUserIdSelector(state);
   const player = _.get(gamePlayersSelector(state), currentUserId, false);
   const editorSelector = (!!player && player.type === userTypes.secondPlayer)
@@ -56,7 +57,7 @@ export const leftEditorSelector = (state) => {
   return editorSelector(state);
 };
 
-export const rightEditorSelector = (state) => {
+export const rightEditorSelector = state => {
   const currentUserId = currentUserIdSelector(state);
   const player = _.get(gamePlayersSelector(state), currentUserId, false);
   const editorSelector = (!!player && player.type === userTypes.secondPlayer)
@@ -65,7 +66,7 @@ export const rightEditorSelector = (state) => {
   return editorSelector(state);
 };
 
-export const currentPlayerTextByLangSelector = lang => (state) => {
+export const currentPlayerTextByLangSelector = lang => state => {
   const userId = currentUserIdSelector(state);
   const editorTexts = editorTextsSelector(state);
   return editorTexts[makeEditorTextKey(userId, lang)];
@@ -75,7 +76,7 @@ export const userLangSelector = userId => state => _.get(editorDataSelector(user
 
 export const gameStatusSelector = state => state.game.gameStatus;
 
-export const gameStatusTitleSelector = (state) => {
+export const gameStatusTitleSelector = state => {
   const gameStatus = gameStatusSelector(state);
   switch (gameStatus.status) {
     case GameStatusCodes.waitingOpponent:
@@ -100,17 +101,17 @@ export const editorHeightSelector = userId => state => _.get(editorDataSelector(
 
 export const executionOutputSelector = userId => state => state.executionOutput[userId];
 
-export const firstExecutionOutputSelector = (state) => {
+export const firstExecutionOutputSelector = state => {
   const playerId = firstPlayerSelector(state).id;
   return executionOutputSelector(playerId)(state);
 };
 
-export const secondExecutionOutputSelector = (state) => {
+export const secondExecutionOutputSelector = state => {
   const playerId = secondPlayerSelector(state).id;
   return executionOutputSelector(playerId)(state);
 };
 
-export const leftExecutionOutputSelector = (state) => {
+export const leftExecutionOutputSelector = state => {
   const currentUserId = currentUserIdSelector(state);
   const player = _.get(gamePlayersSelector(state), currentUserId, false);
   const outputSelector = (!!player && player.type === userTypes.secondPlayer)
@@ -119,7 +120,7 @@ export const leftExecutionOutputSelector = (state) => {
   return outputSelector(state);
 };
 
-export const rightExecutionOutputSelector = (state) => {
+export const rightExecutionOutputSelector = state => {
   const currentUserId = currentUserIdSelector(state);
   const player = _.get(gamePlayersSelector(state), currentUserId, false);
   const outputSelector = (!!player && player.type === userTypes.secondPlayer)
@@ -132,36 +133,27 @@ export const chatUsersSelector = state => state.chat.users;
 
 export const chatMessagesSelector = state => state.chat.messages;
 
-export const currentChatUserSelector = (state) => {
+export const currentChatUserSelector = state => {
   const currentUserId = currentUserIdSelector(state);
 
   return _.find(chatUsersSelector(state), { id: currentUserId });
 };
 
-export const editorsModeSelector = currentUserId => (state) => {
+export const editorsModeSelector = currentUserId => state => {
   if (_.hasIn(gamePlayersSelector(state), currentUserId)) {
     return state.editorUI.mode;
   }
   return EditorModes.default;
 };
 
-
-export const gameListLoadedSelector = state => state.gameList.loaded;
-export const gameListNewGameSelector = state => state.gameList.newGame;
-export const activeGamesSelector = (state) => {
-  const currentUserId = currentUserIdSelector(state);
-  const filterPrivateGamesFunc = ({ users, game_info: { state: gameStatus, type: gameType } }) => {
-    if (gameStatus !== GameStatusCodes.waitingOpponent || gameType !== 'private') {
-      return true;
-    }
-    return _.some(users, { id: currentUserId });
-  };
-  const activeGames = _.filter(state.gameList.activeGames, filterPrivateGamesFunc);
-
-  return activeGames || [];
+export const editorsThemeSelector = currentUserId => state => {
+  if (_.hasIn(gamePlayersSelector(state), currentUserId)) {
+    return state.editorUI.theme;
+  }
+  return EditorThemes.dark;
 };
 
-export const completedGamesSelector = state => state.gameList.completedGames || [];
+export const gameListSelector = state => state.gameList;
 
 export const getUsersStats = state => state.user.usersStats;
 

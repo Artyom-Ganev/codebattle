@@ -9,11 +9,7 @@ root_dir = File.cwd!()
 # with brunch.io to recompile .js and .css sources.
 
 config :codebattle, CodebattleWeb.Endpoint,
-  https: [
-    port: System.get_env("CODEBATTLE_PORT") || 4000,
-    keyfile: Path.join(root_dir, "dev.key"),
-    certfile: Path.join(root_dir, "dev.crt")
-  ],
+  http: [port: System.get_env("CODEBATTLE_PORT", "4000")],
   debug_errors: true,
   code_reloader: true,
   check_origin: false,
@@ -27,7 +23,8 @@ config :codebattle, CodebattleWeb.Endpoint,
       ~r{priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$},
       ~r{priv/gettext/.*(po)$},
       ~r{lib/codebattle_web/views/.*(ex)$},
-      ~r{lib/codebattle_web/templates/.*(slim|slime)$}
+      ~r{lib/codebattle_web/templates/.*(eex|slim|slime|slimleex)$},
+      ~r{lib/codebattle_web/live/.*(eex|slim|slime|slimleex)$}
     ]
   ]
 
@@ -40,10 +37,10 @@ config :phoenix, :stacktrace_depth, 20
 
 # Configure your database
 config :codebattle, Codebattle.Repo,
-  username: System.get_env("CODEBATTLE_DB_USERNAME") || "postgres",
-  password: System.get_env("CODEBATTLE_DB_PASSWORD") || "postgres",
-  hostname: System.get_env("CODEBATTLE_DB_HOSTNAME") || "localhost",
-  database: System.get_env("CODEBATTLE_DB_NAME") || "codebattle_dev",
+  username: System.get_env("CODEBATTLE_DB_USERNAME", "postgres"),
+  password: System.get_env("CODEBATTLE_DB_PASSWORD", "postgres"),
+  hostname: System.get_env("CODEBATTLE_DB_HOSTNAME", "localhost"),
+  database: System.get_env("CODEBATTLE_DB_NAME", "codebattle_dev"),
   pool_size: 5
 
 config :codebattle, Codebattle.Bot, timeout: 2_000

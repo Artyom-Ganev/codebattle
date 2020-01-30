@@ -30,15 +30,73 @@ defmodule CodebattleWeb.Factory do
       name: Base.encode16(:crypto.strong_rand_bytes(2)),
       description: "test sum",
       level: "easy",
-      asserts: "{\"arguments\":[1,1],\"expected\":2}
-      {\"arguments\":[2,2],\"expected\":4}
-      {\"arguments\":[1,3],\"expected\":4}
-      "
+      asserts:
+        "{\"arguments\":[1,1],\"expected\":2}\n{\"arguments\":[2,2],\"expected\":4}\n{\"arguments\":[1,3],\"expected\":4}\n",
+      input_signature: [
+        %{"argument-name" => "a", "type" => %{"name" => "integer"}},
+        %{"argument-name" => "b", "type" => %{"name" => "integer"}}
+      ],
+      output_signature: %{"type" => %{"name" => "integer"}},
+      disabled: false
+    }
+  end
+
+  def task_vectors_factory do
+    %Task{
+      name: Base.encode16(:crypto.strong_rand_bytes(2)),
+      description: "test sum",
+      level: "easy",
+      asserts:
+        "{\"arguments\":[[\"a\", \"b\", \"c\"], [\"d\", \"e\", \"f\"]],\"expected\":[\"abcdef\"]}\n",
+      input_signature: [
+        %{
+          "argument-name" => "a",
+          "type" => %{"name" => "array", "nested" => %{"name" => "string"}}
+        },
+        %{
+          "argument-name" => "b",
+          "type" => %{"name" => "array", "nested" => %{"name" => "string"}}
+        }
+      ],
+      output_signature: %{
+        "type" => %{"name" => "array", "nested" => %{"name" => "string"}}
+      },
+      disabled: false
     }
   end
 
   def bot_playbook_factory do
     %Playbook{}
+  end
+
+  def tournament_factory do
+    %Codebattle.Tournament{
+      type: "individual",
+      name: "name",
+      step: 0,
+      players_count: 16,
+      starts_at: NaiveDateTime.utc_now(),
+      creator_id: 1,
+      data: %{players: [], matches: []}
+    }
+  end
+
+  def team_tournament_factory do
+    %Codebattle.Tournament{
+      type: "team",
+      name: "name",
+      step: 0,
+      players_count: 16,
+      starts_at: NaiveDateTime.utc_now(),
+      creator_id: 1,
+      data: %{players: [], matches: []},
+      meta: %{
+        teams: [
+          %{id: 0, title: "frontend"},
+          %{id: 1, title: "backend"}
+        ]
+      }
+    }
   end
 
   def auth_factory do

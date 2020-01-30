@@ -16,12 +16,12 @@ defmodule Mix.Tasks.Dockers.Build do
   def run(_) do
     {:ok, _started} = Application.ensure_all_started(:codebattle)
 
-    langs = Codebattle.Languages.meta()
+    langs = Codebattle.Languages.meta() |> Map.values()
     build(langs)
   end
 
   defp build(langs) do
-    for {_slug, lang} <- langs do
+    for lang <- langs do
       command =
         "docker build -t #{lang.docker_image} --file #{root()}/dockers/#{lang.slug}/Dockerfile #{
           root()

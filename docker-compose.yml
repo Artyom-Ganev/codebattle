@@ -23,6 +23,14 @@ services:
 
   db:
     image: postgres:10
+    environment:
+      POSTGRES_USER: ${CODEBATTLE_DB_USERNAME}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  # same db but forwards port to host
+  db-local:
+    image: postgres:10
     ports:
       - "5432:${CODEBATTLE_DB_PORT}"
     environment:

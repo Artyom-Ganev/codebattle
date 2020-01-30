@@ -1,4 +1,4 @@
-import React, { Component, Fragment } from 'react';
+import React, { Component } from 'react';
 import _ from 'lodash';
 import { connect } from 'react-redux';
 // import Gon from 'gon';
@@ -11,6 +11,7 @@ import {
   leftExecutionOutputSelector,
   rightExecutionOutputSelector,
   editorsModeSelector,
+  editorsThemeSelector,
 } from '../selectors';
 import Editor from './Editor';
 import LeftEditorToolbar from './LeftEditorToolbar';
@@ -31,7 +32,13 @@ class GameWidget extends Component {
 
   getLeftEditorParams = () => {
     const {
-      currentUserId, players, leftEditor, updateEditorValue, leftEditorHeight, leftEditorsMode,
+      currentUserId,
+      players,
+      leftEditor,
+      updateEditorValue,
+      leftEditorHeight,
+      leftEditorsMode,
+      theme,
     } = this.props;
 
     // FIXME: currentUser shouldn't return {} for spectator
@@ -39,7 +46,7 @@ class GameWidget extends Component {
     const editable = isPlayer;
     const editorState = leftEditor;
     const onChange = isPlayer
-      ? (value) => { updateEditorValue(value); }
+      ? value => { updateEditorValue(value); }
       : _.noop;
 
     // const syntax = _.find(languages, { slug: editorState. });
@@ -51,6 +58,7 @@ class GameWidget extends Component {
       name: 'left-editor',
       editorHeight: leftEditorHeight,
       mode: editable ? leftEditorsMode : editorModes.default,
+      theme,
     };
   }
 
@@ -78,34 +86,34 @@ class GameWidget extends Component {
       return null;
     }
     return (
-      <Fragment>
-          <div className="row no-gutters">
-            <div className="col-12 col-md-6 p-1">
-              <div className="card">
-                <LeftEditorToolbar />
-                <Editor {...this.getLeftEditorParams()} />
-                {/* TODO: move state to parent component */}
-                <GameActionButtons disabled={false} editorUser={leftEditor.userId} />
-                <ExecutionOutput output={leftOutput} />
-              </div>
-            </div>
-            <div className="col-12 col-md-6 p-1">
-              <div className="card">
-                <RightEditorToolbar />
-                <Editor {...this.getRightEditorParams()} />
-                {/* TODO: move state to parent component */}
-                <GameActionButtons disabled editorUser={rightEditor.userId} />
-                <ExecutionOutput output={rightOutput} />
-              </div>
+      <>
+        <div className="row no-gutters">
+          <div className="col-12 col-md-6 p-1">
+            <div className="card">
+              <LeftEditorToolbar />
+              <Editor {...this.getLeftEditorParams()} />
+              {/* TODO: move state to parent component */}
+              <GameActionButtons disabled={false} editorUser={leftEditor.userId} />
+              <ExecutionOutput output={leftOutput} id="1" />
             </div>
           </div>
+          <div className="col-12 col-md-6 p-1">
+            <div className="card">
+              <RightEditorToolbar />
+              <Editor {...this.getRightEditorParams()} />
+              {/* TODO: move state to parent component */}
+              <GameActionButtons disabled editorUser={rightEditor.userId} />
+              <ExecutionOutput output={rightOutput} id="2" />
+            </div>
+          </div>
+        </div>
         <NotificationsHandler />
-      </Fragment>
+      </>
     );
   }
 }
 
-const mapStateToProps = (state) => {
+const mapStateToProps = state => {
   const leftEditor = leftEditorSelector(state);
   const rightEditor = rightEditorSelector(state);
   const leftUserId = _.get(leftEditor, ['userId'], null);
@@ -121,6 +129,7 @@ const mapStateToProps = (state) => {
     leftOutput: leftExecutionOutputSelector(state),
     rightOutput: rightExecutionOutputSelector(state),
     leftEditorsMode: editorsModeSelector(leftUserId)(state),
+    theme: editorsThemeSelector(leftUserId)(state),
   };
 };
 

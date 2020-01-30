@@ -8,19 +8,21 @@ defmodule Codebattle.Mixfile do
     [
       app: :codebattle,
       version: "0.0.12",
-      elixir: "~> 1.7",
+      elixir: "~> 1.9",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      # test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [
         coveralls: :test,
         "coveralls.detail": :test,
         "coveralls.post": :test,
+        "coveralls.json": :test,
         "coveralls.html": :test
       ],
-      deps: deps()
+      test_coverage: [tool: ExCoveralls],
+      deps: deps(),
+      elixirc_options: [warnings_as_errors: true]
     ]
   end
 
@@ -30,25 +32,7 @@ defmodule Codebattle.Mixfile do
   def application do
     [
       mod: {Codebattle.Application, []},
-      extra_applications: [
-        :runtime_tools,
-        :phoenix,
-        :phoenix_pubsub,
-        :phoenix_html,
-        :cowboy,
-        :logger,
-        :gettext,
-        :phoenix_gon,
-        :phoenix_ecto,
-        :postgrex,
-        :yaml_elixir,
-        :ueberauth,
-        :ueberauth_github,
-        :gproc,
-        :one_signal,
-        :scrivener_ecto,
-        :scrivener_html
-      ]
+      extra_applications: [:runtime_tools, :logger]
     ]
   end
 
@@ -64,12 +48,14 @@ defmodule Codebattle.Mixfile do
       {:phoenix, "~> 1.3"},
       {:phoenix_pubsub, "~> 1.0"},
       {:phoenix_ecto, "~> 4.0"},
+      {:phoenix_live_view, "~> 0.4.0"},
       {:postgrex, ">= 0.0.0"},
       {:phoenix_html, "~> 2.10"},
       {:gettext, "~> 0.11"},
       {:cowboy, "~> 1.0"},
       {:plug_cowboy, "~> 1.0"},
-      {:phoenix_slime, "~> 0.8.0"},
+      {:phoenix_slime, github: "slime-lang/phoenix_slime"},
+      {:slime, github: "slime-lang/slime", override: true},
       {:ueberauth, "~> 0.5"},
       {:ueberauth_github, "~> 0.7"},
       {:gproc, "~> 0.6"},
@@ -84,24 +70,27 @@ defmodule Codebattle.Mixfile do
       {:envy, "~> 1.1.1"},
       {:one_signal, git: "https://github.com/vtm9/one_signal.git"},
       {:paginator, "~> 0.6"},
-      {:scrivener_ecto, "~> 2.0"},
+      {:scrivener_ecto, "~> 2.2"},
       {:scrivener_html, git: "https://github.com/hlongvu/scrivener_html.git"},
       {:phoenix_client, git: "https://github.com/vtm9/phoenix_client.git"},
       {:websocket_client, "~> 1.3"},
       {:jason, "~> 1.1"},
       {:websockex, "~> 0.4.0"},
       {:socket, "~> 0.3"},
+      {:timex, "~> 3.5"},
+      {:deep_merge, "~> 1.0"},
 
       # dev_and_test
-      {:credo, "~> 0.8", only: [:dev, :test], runtime: false},
+      {:credo, ">= 0.0.0", only: [:dev, :test], runtime: false},
 
       # dev
       {:phoenix_live_reload, "~> 1.0", only: :dev},
 
       # test
+      {:floki, "0.23.1", only: :test},
       {:mock, "~> 0.3.0", only: :test},
       {:phoenix_integration, "~> 0.5", only: :test},
-      {:excoveralls, "~> 0.7", only: :test},
+      {:excoveralls, "~> 0.10", only: :test},
       {:faker, "~> 0.8", only: :test},
       {:ex_machina, "~> 2.0", only: :test}
     ]

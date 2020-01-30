@@ -21,7 +21,14 @@ defmodule Codebattle.GameProcess.Server do
   end
 
   def fsm(game_id) do
-    GenServer.call(server_name(game_id), :fsm, 20_000)
+    case game_pid(game_id) do
+      :undefined ->
+        {:error, :game_terminated}
+
+      _pid ->
+        fsm = GenServer.call(server_name(game_id), :fsm, 20_000)
+        {:ok, fsm}
+    end
   end
 
   def game_pid(game_id) do
@@ -35,12 +42,6 @@ defmodule Codebattle.GameProcess.Server do
   end
 
   def handle_cast({:transition, event, params}, fsm) do
-    Logger.debug(
-      "#{__MODULE__} CAST transition STATE: #{fsm.state}, GAME_ID: #{fsm.data.game_id}, EVENT: #{
-        inspect(event)
-      }, PARAMS: #{inspect(params)}"
-    )
-
     new_fsm = Fsm.transition(fsm, event, [params])
     {:noreply, new_fsm}
   end
@@ -50,12 +51,6 @@ defmodule Codebattle.GameProcess.Server do
   end
 
   def handle_call({:transition, event, params}, _from, fsm) do
-    Logger.debug(
-      "#{__MODULE__} CALL transition STATE: #{fsm.state}, GAME_ID: #{fsm.data.game_id} EVENT: #{
-        inspect(event)
-      }, PARAMS: #{inspect(params)}"
-    )
-
     case Fsm.transition(fsm, event, [params]) do
       {{:error, reason}, _} ->
         {:reply, {:error, reason, fsm}, fsm}

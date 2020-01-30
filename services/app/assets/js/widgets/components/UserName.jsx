@@ -4,7 +4,7 @@ import LanguageIcon from './LanguageIcon';
 
 const UserName = ({
   user: {
-    id, github_id: githubId, name, rating, lang, rating_diff: ratingDiff,
+    id, githubId, name, rating, lang, ratingDiff,
   },
 }) => {
   const anonymousUser = (
@@ -16,30 +16,33 @@ const UserName = ({
     </span>
   );
 
-  const displayDiff = (num) => {
+  const displayDiff = num => {
     if (num < 0) {
       return <small className="text-danger">{` ${num}`}</small>;
     }
     return <small className="text-success">{` +${num}`}</small>;
   };
   const githubUser = (
-    <a
-      href={`/users/${id}`}
-      key={githubId}
-    >
-      <img
-        className="attachment rounded border mr-1"
-        alt={name}
-        src={`https://avatars0.githubusercontent.com/u/${githubId}`}
-        style={{ width: '25px' }}
-      />
-      <span className="mr-1">{name}</span>
+    <span className="d-flex align-items-center">
+      <a
+        href={`/users/${id}`}
+        key={githubId}
+        className="d-flex align-items-center mr-1"
+      >
+        <img
+          className="attachment rounded border mr-1"
+          alt={name}
+          src={`https://avatars0.githubusercontent.com/u/${githubId}`}
+          style={{ width: '25px' }}
+        />
+        <span>{name}</span>
+      </a>
       <LanguageIcon lang={lang} />
       <small>
         {_.isFinite(rating) && rating}
       </small>
       {ratingDiff ? displayDiff(ratingDiff) : ''}
-    </a>
+    </span>
   );
 
   return (

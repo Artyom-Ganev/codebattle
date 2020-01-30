@@ -6,6 +6,7 @@ defmodule CodebattleWeb.Router do
     plug(:fetch_session)
     plug(CodebattleWeb.Plugs.AssignCurrentUser)
     plug(:fetch_flash)
+    plug(Phoenix.LiveView.Flash)
     plug(:protect_from_forgery)
     plug(:put_secure_browser_headers)
     plug(CodebattleWeb.Plugs.AssignGon)
@@ -34,7 +35,7 @@ defmodule CodebattleWeb.Router do
       get("/:user_id/activity", ActivityController, :show)
       get("/game_activity", GameActivityController, :show)
       get("/user/:id/stats", UserController, :stats)
-      resources("/users/:page", UserController, only: [:index])
+      resources("/users", UserController, only: [:index])
     end
   end
 
@@ -45,7 +46,7 @@ defmodule CodebattleWeb.Router do
     resources("/session", SessionController, singleton: true, only: [:delete])
     get("/", PageController, :index)
     resources("/users", UserController, only: [:index, :show])
-    resources("/tournaments", TournamentController, only: [:index])
+    resources("/tournaments", TournamentController, only: [:index, :show])
     get("/settings", UserController, :edit, as: :user_setting)
     put("/settings", UserController, :update, as: :user_setting)
     resources("/games", GameController, only: [:create, :show, :delete])

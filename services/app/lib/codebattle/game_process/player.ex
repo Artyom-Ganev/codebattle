@@ -1,9 +1,12 @@
 defmodule Codebattle.GameProcess.Player do
   @moduledoc "Struct for player"
   alias Codebattle.Languages
+
+  alias Codebattle.Tournament.Types
   # @game_result [:undefined, :gave_up, :won, :lost]
 
-  alias Codebattle.User
+  # require Logger
+
   alias Codebattle.UserGame
 
   @derive {Poison.Encoder,
@@ -30,6 +33,7 @@ defmodule Codebattle.GameProcess.Player do
   defstruct id: "",
             editor_text: "module.exports = () => {\n\n};",
             editor_lang: "js",
+            lang: "",
             game_result: :undefined,
             output: "",
             result: "{}",
@@ -58,22 +62,37 @@ defmodule Codebattle.GameProcess.Player do
           rating: user_game.rating,
           rating_diff: user_game.rating_diff,
           editor_lang: user_game.lang,
+          lang: user_game.lang,
           creator: user_game.creator,
           game_result: user_game.result
         }
     end
   end
 
-  def build(%User{} = user, params \\ %{}) do
+  def build(user, params \\ %{})
+
+  def build(%Types.Player{} = user, params) do
+    player = %__MODULE__{
+      id: user.id,
+      public_id: user.public_id,
+      is_bot: user.is_bot,
+      github_id: user.github_id,
+      name: user.name,
+      rating: user.rating,
+      editor_lang: user.lang || "js",
+      lang: user.lang || "js"
+    }
+
+    Map.merge(player, params)
+  end
+
+  def build(user, params) do
     player =
       case user.id do
         nil ->
           %__MODULE__{}
 
         _ ->
-          editor_lang = user.lang || "js"
-          editor_text = Languages.get_solution(editor_lang)
-
           %__MODULE__{
             id: user.id,
             public_id: user.public_id,
@@ -81,8 +100,8 @@ defmodule Codebattle.GameProcess.Player do
             github_id: user.github_id,
             name: user.name,
             rating: user.rating,
-            editor_lang: editor_lang,
-            editor_text: editor_text,
+            editor_lang: user.lang || "js",
+            lang: user.lang || "js",
             achievements: user.achievements
           }
       end
@@ -90,12 +109,18 @@ defmodule Codebattle.GameProcess.Player do
     Map.merge(player, params)
   end
 
-  def rebuild(%__MODULE__{} = player) do
-    user = Codebattle.Repo.get!(User, player.id)
+  def rebuild(%__MODULE__{} = player, task) do
     editor_lang = player.editor_lang
-    editor_text = Languages.get_solution(editor_lang)
-    params = %{editor_lang: editor_lang, editor_text: editor_text}
+    editor_text = Languages.get_solution(editor_lang, task)
 
-    build(user, params)
+    params = %{
+      editor_lang: editor_lang,
+      editor_text: editor_text,
+      game_result: :undefined,
+      result: "{}",
+      output: ""
+    }
+
+    Map.merge(player, params)
   end
 end

@@ -5,28 +5,32 @@ defmodule Codebattle.Bot.PlaybookPlayerRunner do
 
   require Logger
 
-  alias Codebattle.Bot.{Builder, Playbook, SocketDriver}
-  alias Codebattle.GameProcess.Play
+  alias Codebattle.Bot.{Playbook}
 
   @timeout Application.get_env(:codebattle, Codebattle.Bot.PlaybookPlayerRunner)[:timeout]
 
   def call(params) do
-    Logger.info("#{__MODULE__} RUN TASK with PARAMS: #{inspect(params)}, SLEEP for #{@timeout} ")
-
     :timer.sleep(@timeout)
     playbook = Playbook.random(params.task_id)
 
     if playbook do
-      {id, diff} = playbook
-      Logger.info("#{__MODULE__} BOT START with playbook_id = #{id}")
+      {id, playbook_data} = playbook
+      diffs = Map.get(playbook_data, "playbook")
+      meta = Map.get(playbook_data, "meta")
 
-      diffs = Map.get(diff, "playbook")
-      game_topic = "game:#{params.game_id}"
-      start_bot_cycle(diffs, game_topic, params.game_channel)
+      step_coefficient = params.bot_time_ms / Map.get(meta, "total_time_ms")
+
+      Logger.info("#{__MODULE__} BOT START with playbook_id: #{id};
+        bot_time_ms: #{params.bot_time_ms},
+        k: #{step_coefficient},
+        total_time_ms: #{meta["total_time_ms"]}
+        ")
+
+      start_bot_cycle(meta, diffs, params.game_channel, step_coefficient)
     end
   end
 
-  defp start_bot_cycle(diffs, game_topic, channel_pid) do
+  defp start_bot_cycle(meta, diffs, channel_pid, step_coefficient) do
     # Diff is one the maps
     #
     # 1 Main map with action to update text
@@ -36,12 +40,12 @@ defmodule Codebattle.Bot.PlaybookPlayerRunner do
     # %{"time" => 10, "lang" => "elixir"}
 
     init_document = TextDelta.new() |> TextDelta.insert("")
-    init_lang = "js"
-    Logger.debug("Bot player initial sleep #{@timeout}")
+    init_lang = meta["init_lang"]
 
     {editor_text, lang} =
       Enum.reduce(diffs, {init_document, init_lang}, fn diff_map, {document, lang} ->
-        diff_map |> Map.get("time") |> :timer.sleep()
+        timer_value = Map.get(diff_map, "time") * step_coefficient
+        :timer.sleep(Kernel.trunc(timer_value))
         # TODO: maybe optimize serialization/deserialization process
         delta = diff_map |> Map.get("delta", nil)
 

@@ -16,12 +16,12 @@ defmodule Mix.Tasks.Dockers.Pull do
   def run(_) do
     {:ok, _started} = Application.ensure_all_started(:codebattle)
 
-    langs = Codebattle.Languages.meta()
+    langs = Codebattle.Languages.meta() |> Map.values()
     pull(langs)
   end
 
   defp pull(langs) do
-    for {_slug, lang} <- langs do
+    for lang <- langs do
       IO.puts("Start pulling image for #{lang.slug}")
 
       {output, _status} =

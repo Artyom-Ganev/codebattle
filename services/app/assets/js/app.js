@@ -15,6 +15,8 @@ import 'phoenix_html';
 import '@babel/polyfill';
 import '@fortawesome/fontawesome-free/js/all';
 import 'bootstrap';
+import { Socket } from 'phoenix';
+import { LiveSocket } from 'phoenix_live_view';
 
 // Import local files
 //
@@ -24,6 +26,19 @@ import 'bootstrap';
 import {
   renderGameWidget, renderLobby, renderHeatmapWidget, renderUsersRating,
 } from './widgets';
+
+const Hooks = {
+  NewChatMessage: {
+    mounted() {
+      this.el.scrollTop = this.el.scrollHeight;
+    },
+    updated() {
+      this.el.scrollTop = this.el.scrollHeight;
+    },
+  },
+};
+const liveSocket = new LiveSocket('/live', Socket, { hooks: Hooks });
+liveSocket.connect();
 
 const gameWidgetRoot = document.getElementById('game-widget-root');
 const heatmapRoot = document.getElementById('heatmap-root');

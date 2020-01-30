@@ -38,12 +38,12 @@ defmodule Codebattle.GameProcess.TimeoutServer do
     {:noreply, game_id}
   end
 
-  # FIXME: without these prints error in tests
+  # TODO: FIXME without these prints error in tests
   def handle_info({_, :ok}, state) do
     {:noreply, state}
   end
 
-  def handle_info({:DOWN, ref, :process, _, _}, state) do
+  def handle_info({:DOWN, _ref, :process, _, _}, state) do
     {:noreply, state}
   end
 

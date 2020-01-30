@@ -1,10 +1,10 @@
-import { handleActions } from 'redux-actions';
+import { createReducer } from '@reduxjs/toolkit';
 import * as actions from '../actions';
 
 const initialState = {};
 
-export default handleActions({
-  [actions.updateExecutionOutput](state, { payload: { userId, result, output } }) {
-    return { ...state, [userId]: { output, result } };
+export default createReducer(initialState, {
+  [actions.updateExecutionOutput](state, { payload: { userId, ...rest } }) {
+    state[userId] = rest;
   },
-}, initialState);
+});

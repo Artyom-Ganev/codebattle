@@ -6,24 +6,22 @@ defmodule Codebattle.Bot.PlaybookAsyncRunner do
 
   require Logger
 
-  alias Codebattle.Bot.Playbook
-  alias Codebattle.GameProcess.Play
-
   # API
   # Starts GenServer for bot for every game. When GenServer receives :run, bot starts play
   def create_server(%{game_id: game_id, bot: bot}) do
     try do
-      GenServer.start(__MODULE__, %{game_id: game_id, bot: bot}, name: server_name(game_id))
+      GenServer.start(__MODULE__, %{game_id: game_id, bot: bot},
+        name: server_name(game_id, bot.id)
+      )
     rescue
       e in FunctionClauseError ->
-        e
         Logger.error(inspect(e))
     end
   end
 
   # Bot strats play and chat
   def run!(params) do
-    GenServer.cast(server_name(params.game_id), {:run, params})
+    GenServer.cast(server_name(params.game_id, params.bot_id), {:run, params})
   end
 
   # SERVER
@@ -34,27 +32,10 @@ defmodule Codebattle.Bot.PlaybookAsyncRunner do
   end
 
   def handle_cast({:run, params}, state) do
-    port = CodebattleWeb.Endpoint.struct_url().port
-
-    # TODO: FIXME move to config
-    {schema, new_port} =
-      case port do
-        # dev
-        4000 ->
-          {"wss", port}
-
-        # test
-        4001 ->
-          {"ws", port}
-
-        # prod
-        _ ->
-          {"ws", 8080}
-      end
+    port = Application.get_env(:codebattle, :ws_port, 4000)
 
     socket_opts = [
-      url:
-        "#{schema}://localhost:#{new_port}/ws/websocket?vsn=2.0.0&token=#{bot_token(state.bot.id)}"
+      url: "ws://localhost:#{port}/ws/websocket?vsn=2.0.0&token=#{bot_token(state.bot.id)}"
     ]
 
     {:ok, socket} = PhoenixClient.Socket.start_link(socket_opts)
@@ -75,8 +56,8 @@ defmodule Codebattle.Bot.PlaybookAsyncRunner do
             chat_state: chat_state
           })
 
-        Task.async(fn -> Codebattle.Bot.PlaybookPlayerRunner.call(new_params) end)
-        Task.async(fn -> Codebattle.Bot.ChatClientRunner.call(new_params) end)
+        Task.start(fn -> Codebattle.Bot.PlaybookPlayerRunner.call(new_params) end)
+        Task.start(fn -> Codebattle.Bot.ChatClientRunner.call(new_params) end)
 
       {{:error, reason}, _} ->
         {:error, reason}
@@ -90,16 +71,16 @@ defmodule Codebattle.Bot.PlaybookAsyncRunner do
 
   # HELPERS
 
-  def handle_info(message, state) do
+  def handle_info(_message, state) do
     {:noreply, state}
   end
 
-  defp server_name(game_id) do
-    {:via, :gproc, game_key(game_id)}
+  defp server_name(game_id, bot_id) do
+    {:via, :gproc, game_key(game_id, bot_id)}
   end
 
-  defp game_key(game_id) do
-    {:n, :l, {:bot_player, "#{game_id}"}}
+  defp game_key(game_id, bot_id) do
+    {:n, :l, {:bot_player, "#{game_id}__#{bot_id}"}}
   end
 
   defp bot_token(bot_id) do

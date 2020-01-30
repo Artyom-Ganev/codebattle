@@ -1,0 +1,8 @@
+.my-3
+  = if !Enum.empty?(@players) do
+    = for player <- @players do
+      .my-3
+        = render "_player.html", player: player
+  - else
+    p NO_PARTICIPANTS_YET
+

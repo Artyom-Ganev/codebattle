@@ -17,8 +17,22 @@ defmodule Codebattle.Bot.Builder do
         limit: 1
       )
 
-    bot = Repo.one(query)
+    bot = Repo.one!(query)
     Map.merge(bot, params)
+  end
+
+  def build_list(count, params \\ %{}) do
+    query =
+      from(
+        user in User,
+        where: user.is_bot == true,
+        order_by: fragment("RANDOM()"),
+        limit: ^count
+      )
+
+    query
+    |> Repo.all()
+    |> Enum.map(&Map.merge(&1, params))
   end
 
   def build_free_bot do
@@ -33,6 +47,6 @@ defmodule Codebattle.Bot.Builder do
         limit: 1
       )
 
-    bot = Repo.one(query)
+    Repo.one(query)
   end
 end

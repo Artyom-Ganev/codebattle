@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import React from 'react';
 import _ from 'lodash';
 import moment from 'moment';
 import { connect } from 'react-redux';
@@ -10,10 +10,10 @@ import i18n from '../../i18n';
 import * as lobbyMiddlewares from '../middlewares/Lobby';
 import GameStatusCodes from '../config/gameStatusCodes';
 import * as actions from '../actions';
-import {
-  activeGamesSelector, completedGamesSelector, gameListLoadedSelector, gameListNewGameSelector,
-} from '../selectors';
+import * as selectors from '../selectors';
 import Loading from '../components/Loading';
+import GamesHeatmap from '../components/GamesHeatmap';
+import Card from '../components/Card';
 import UserInfo from './UserInfo';
 
 const timeoutOptions = {
@@ -40,7 +40,7 @@ class GameList extends React.Component {
     fetchState();
   }
 
-  updateTimeoutSeconds = (timeoutSeconds) => {
+  updateTimeoutSeconds = timeoutSeconds => {
     const { selectNewGameTimeout } = this.props;
     selectNewGameTimeout({ timeoutSeconds });
   }
@@ -48,26 +48,26 @@ class GameList extends React.Component {
   renderResultIcon = (gameId, player1, player2) => {
     const tooltipId = `tooltip-${gameId}-${player1.id}`;
 
-    if (player1.game_result === 'gave_up') {
+    if (player1.gameResult === 'gave_up') {
       return (
         <OverlayTrigger
           overlay={<Tooltip id={tooltipId}>Player gave up</Tooltip>}
           placement="left"
         >
-          <span className="align-middle mr-2">
+          <span className="align-middle mr-1">
             <i className="far fa-flag" aria-hidden="true" />
           </span>
         </OverlayTrigger>
       );
     }
 
-    if (player1.game_result === 'won' && player2.game_result !== 'gave_up') {
+    if (player1.gameResult === 'won' && player2.gameResult !== 'gave_up') {
       return (
         <OverlayTrigger
           overlay={<Tooltip id={tooltipId}>Player won</Tooltip>}
           placement="left"
         >
-          <span className="align-middle mr-2">
+          <span className="align-middle mr-1">
             <i className="fa fa-trophy text-warning" aria-hidden="true" />
           </span>
         </OverlayTrigger>
@@ -87,22 +87,28 @@ class GameList extends React.Component {
     if (players.length === 1) {
       return (
         <td className="p-3 align-middle text-nowrap" colSpan={2}>
-          {this.renderEmptyResultIcon()}
-          <UserInfo user={players[0]} />
+          <div className="d-flex align-items-center">
+            {this.renderEmptyResultIcon()}
+            <UserInfo user={players[0]} />
+          </div>
         </td>
       );
     }
     return (
-      <Fragment>
+      <>
         <td className="p-3 align-middle text-nowrap x-username-td text-truncate">
-          {this.renderResultIcon(gameId, players[0], players[1])}
-          <UserInfo user={players[0]} />
+          <div className="d-flex align-items-center">
+            {this.renderResultIcon(gameId, players[0], players[1])}
+            <UserInfo user={players[0]} />
+          </div>
         </td>
         <td className="p-3 align-middle text-nowrap x-username-td text-truncate">
-          {this.renderResultIcon(gameId, players[1], players[0])}
-          <UserInfo user={players[1]} />
+          <div className="d-flex align-items-center">
+            {this.renderResultIcon(gameId, players[1], players[0])}
+            <UserInfo user={players[1]} />
+          </div>
         </td>
-      </Fragment>
+      </>
     );
   };
 
@@ -115,33 +121,30 @@ class GameList extends React.Component {
 
   isPlayer = (user, game) => !_.isEmpty(_.find(game.players, { id: user.id }));
 
-  renderShowGameButton = gameUrl => (
-    <button type="button" className="btn btn-info btn-sm" data-method="get" data-to={gameUrl}>
+  renderShowButton = url => (
+    <button type="button" className="btn btn-info btn-sm" data-method="get" data-to={url}>
       Show
     </button>
   );
 
-  renderGameActionButton = (game) => {
-    const gameUrl = `/games/${game.game_id}`;
+  renderGameActionButtons = game => {
+    const gameUrl = `/games/${game.gameId}`;
     const currentUser = Gon.getAsset('current_user');
-    const gameState = game.game_info.state;
+    const gameState = game.gameInfo.state;
 
     if (gameState === GameStatusCodes.playing) {
-      return this.renderShowGameButton(gameUrl);
+      return this.renderShowButton(gameUrl);
     }
 
     if (gameState === GameStatusCodes.waitingOpponent) {
       if (this.isPlayer(currentUser, game)) {
         return (
           <div className="btn-group">
-            {this.renderShowGameButton(gameUrl)}
-            {
-              // TODO_NOW: pretty add channel.push(cancel_game)
-            }
+            {this.renderShowButton(gameUrl)}
             <button
               type="button"
               className="btn btn-danger btn-sm"
-              onClick={lobbyMiddlewares.cancelGame(game.game_id)}
+              onClick={lobbyMiddlewares.cancelGame(game.gameId)}
             >
               Cancel
             </button>
@@ -151,17 +154,19 @@ class GameList extends React.Component {
       if (currentUser.id === 'anonymous') {
         return null;
       }
-
       return (
-        <button
-          type="button"
-          className="btn btn-primary btn-sm"
-          data-method="post"
-          data-csrf={window.csrf_token}
-          data-to={`${gameUrl}/join`}
-        >
-          Join
-        </button>
+        <div className="btn-group">
+          <button
+            type="button"
+            className="btn btn-success btn-sm"
+            data-method="post"
+            data-csrf={window.csrf_token}
+            data-to={`${gameUrl}/join`}
+          >
+            Join
+          </button>
+          {this.renderShowButton(gameUrl)}
+        </div>
       );
     }
 
@@ -192,14 +197,14 @@ class GameList extends React.Component {
   };
 
   renderStartNewGameDropdownMenu = (gameType, timeoutSeconds) => (
-    <Fragment>
+    <>
       <div className="dropdown-header">Select a difficulty</div>
       <div className="dropdown-divider" />
       {this.renderStartNewGameButton('elementary', gameType, timeoutSeconds)}
       {this.renderStartNewGameButton('easy', gameType, timeoutSeconds)}
       {this.renderStartNewGameButton('medium', gameType, timeoutSeconds)}
       {this.renderStartNewGameButton('hard', gameType, timeoutSeconds)}
-    </Fragment>
+    </>
   )
 
   renderStartNewGameSelector = timeoutSeconds => (
@@ -272,13 +277,12 @@ class GameList extends React.Component {
     ));
     // const options = []
     //
-
     return (
-      <Fragment>
+      <>
         <div className="dropdown-header">Select time limit</div>
         <div className="dropdown-divider" />
         {options}
-      </Fragment>
+      </>
     );
   };
 
@@ -302,51 +306,49 @@ class GameList extends React.Component {
     </div>
   );
 
-  renderActiveGames = (activeGames) => {
-    if (_.isEmpty(activeGames)) {
+  renderLiveTournaments = tournaments => {
+    if (_.isEmpty(tournaments)) {
       return (
-        <p className="text-center">There are no active games right now.</p>
+        <div className="text-center">
+          <p className="mb-0">There are no active tournaments right now</p>
+          <a href="/tournaments/#create">You may want to create one</a>
+        </div>
       );
     }
-
     return (
-      <div className="table-responsive mt-2">
+      <div className="table-responsive">
         <table className="table">
           <thead className="text-left">
             <tr>
-              <th className="p-3 border-0">Date</th>
-              <th className="p-3 border-0">Level</th>
-              <th className="p-3 border-0" colSpan="2">Players</th>
-              <th className="p-3 border-0">State</th>
-              <th className="p-3 border-0">Time limit</th>
-              <th className="p-3 border-0">Actions</th>
+              <th className="p-3 border-0">title</th>
+              <th className="p-3 border-0">starts_at</th>
+              <th className="p-3 border-0">type</th>
+              {/* <th className="p-3 border-0">creator</th> */}
+              <th className="p-3 border-0">state</th>
+              <th className="p-3 border-0">actions</th>
             </tr>
           </thead>
           <tbody>
-            {activeGames.map(game => (
-              <tr key={game.game_id}>
+            {tournaments.map(tournament => (
+              <tr key={tournament.id}>
+                <td className="p-3 align-middle text-nowrap">
+                  {tournament.name}
+                </td>
                 <td className="p-3 align-middle text-nowrap">
                   {moment
-                    .utc(game.game_info.starts_at)
+                    .utc(tournament.startsAt)
                     .local()
                     .format('YYYY-MM-DD HH:mm')}
                 </td>
                 <td className="p-3 align-middle text-nowrap">
-                  {this.renderGameLevelBadge(game.game_info.level)}
+                  {tournament.type}
                 </td>
-
-                {this.renderPlayers(game.id, game.players)}
-
                 <td className="p-3 align-middle text-nowrap">
-                  {game.game_info.state}
+                  {tournament.state}
                 </td>
-
-
-                <td className="p-3 align-middle text-nowrap">
-                  {timeoutOptions[game.game_info.timeout_seconds]}
+                <td className="p-3 align-middle">
+                  {this.renderShowButton(`/tournaments/${tournament.id}/`)}
                 </td>
-
-                <td className="p-3 align-middle">{this.renderGameActionButton(game)}</td>
               </tr>
             ))}
           </tbody>
@@ -355,84 +357,139 @@ class GameList extends React.Component {
     );
   };
 
-  renderGameContainers = (activeGames, completedGames) => (
-    <>
-      <div className="container bg-white shadow-sm py-4 mb-3">
-        <h3 className="text-center mb-4">Active games</h3>
-        {this.renderActiveGames(activeGames)}
-      </div>
-      <div className="container bg-white shadow-sm py-4">
-        <h3 className="text-center mb-4">Completed games</h3>
-        <div className="table-responsive">
-          <table className="table table-sm">
-            <thead>
-              <tr>
-                <th className="p-3 border-0">Date</th>
-                <th className="p-3 border-0">Level</th>
-                <th className="p-3 border-0" colSpan="2">Players</th>
-                <th className="p-3 border-0">Duration</th>
-                <th className="p-3 border-0">Actions</th>
+  renderActiveGames = games => {
+    if (_.isEmpty(games)) {
+      return (
+        <p className="text-center">There are no active games right now.</p>
+      );
+    }
+    return (
+      <div className="table-responsive">
+        <table className="table">
+          <thead className="text-left">
+            <tr>
+              <th className="p-3 border-0">Date</th>
+              <th className="p-3 border-0">Level</th>
+              <th className="p-3 border-0 text-center" colSpan="2">Players</th>
+              <th className="p-3 border-0">State</th>
+              <th className="p-3 border-0 text-nowrap">Time limit</th>
+              <th className="p-3 border-0">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {games.map(game => (
+              <tr key={game.gameId}>
+                <td className="p-3 align-middle text-nowrap">
+                  {moment
+                    .utc(game.gameInfo.startsAt)
+                    .local()
+                    .format('YYYY-MM-DD HH:mm')}
+                </td>
+                <td className="p-3 align-middle text-nowrap">
+                  {this.renderGameLevelBadge(game.gameInfo.level)}
+                </td>
+                {this.renderPlayers(game.id, game.players)}
+                <td className="p-3 align-middle text-nowrap">
+                  {game.gameInfo.state}
+                </td>
+                <td className="p-3 align-middle text-nowrap">
+                  {timeoutOptions[game.gameInfo.timeoutSeconds]}
+                </td>
+                <td className="p-3 align-middle">{this.renderGameActionButtons(game)}</td>
               </tr>
-            </thead>
-            <tbody>
-              {completedGames.map(game => (
-                <tr key={game.id}>
-                  <td className="p-3 align-middle text-nowrap">
-                    {moment
-                      .utc(game.updated_at)
-                      .local()
-                      .format('YYYY-MM-DD HH:mm')}
-                  </td>
-                  <td className="p-3 align-middle text-nowrap">
-                    {this.renderGameLevelBadge(game.level)}
-                  </td>
-                  {this.renderPlayers(game.id, game.players)}
-
-                  <td className="p-3 align-middle text-nowrap">
-                    {moment.duration(game.duration, 'seconds').humanize()}
-                  </td>
-                  <td className="p-3 align-middle">{this.renderShowGameButton(`/games/${game.id}`)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </tbody>
+        </table>
       </div>
-    </>
-  )
+    );
+  };
+
+  renderCompletedGames = games => (
+    <div className="table-responsive">
+      <table className="table table-sm">
+        <thead>
+          <tr>
+            <th className="p-3 border-0">Date</th>
+            <th className="p-3 border-0">Level</th>
+            <th className="p-3 border-0 text-center" colSpan="2">Players</th>
+            <th className="p-3 border-0">Duration</th>
+            <th className="p-3 border-0">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {games.map(game => (
+            <tr key={game.id}>
+              <td className="p-3 align-middle text-nowrap">
+                {moment
+                  .utc(game.updatedAt)
+                  .local()
+                  .format('YYYY-MM-DD HH:mm')}
+              </td>
+              <td className="p-3 align-middle text-nowrap">
+                {this.renderGameLevelBadge(game.level)}
+              </td>
+              {this.renderPlayers(game.id, game.players)}
+              <td className="p-3 align-middle text-nowrap">
+                {moment.duration(game.duration, 'seconds').humanize()}
+              </td>
+              <td className="p-3 align-middle">{this.renderShowButton(`/games/${game.id}`)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  renderGameContainers = () => {
+    const {
+      activeGames, completedGames, liveTournaments,
+    } = this.props;
+    return (
+      <>
+        <Card title="Active games">
+          {this.renderActiveGames(activeGames)}
+        </Card>
+        <Card title="Active tournaments">
+          {this.renderLiveTournaments(liveTournaments)}
+        </Card>
+        <Card title="Game activity">
+          <div className="row justify-content-center">
+            <div className="col-md-8">
+              <GamesHeatmap />
+            </div>
+          </div>
+        </Card>
+        {!_.isEmpty(completedGames) && (
+        <Card title="Completed games">
+          {this.renderCompletedGames(completedGames)}
+        </Card>
+        )}
+      </>
+    );
+  }
 
   render() {
-    const {
-      activeGames, completedGames, loaded, newGame,
-    } = this.props;
+    const { loaded, newGame } = this.props;
     const timeoutSeconds = newGame.timeoutSeconds || 0;
 
     return (
       <>
-        <div className="container bg-white shadow-sm py-4 mb-3">
-          <h3 className="text-center mb-4">New game</h3>
+        <Card title="New game">
           <div className="d-flex flex-sm-row flex-column align-items-center justify-content-center flex-wrap">
             {this.renderTimeoutSelector(timeoutSeconds)}
             {this.renderStartNewGameSelector(timeoutSeconds)}
             {this.renderPlayWithFriendSelector(timeoutSeconds)}
           </div>
-        </div>
+        </Card>
 
-        {!loaded ? (
-          <Loading />
-        )
-          : this.renderGameContainers(activeGames, completedGames)
-        }
+        {!loaded ? <Loading /> : this.renderGameContainers()}
       </>
     );
   }
 }
 
 const mapStateToProps = state => ({
-  activeGames: activeGamesSelector(state),
-  loaded: gameListLoadedSelector(state),
-  newGame: gameListNewGameSelector(state),
-  completedGames: completedGamesSelector(state),
+  ...selectors.gameListSelector(state),
   currentUser: Gon.getAsset('current_user'), // FIXME: don't use gon in components, Luke
 });
 

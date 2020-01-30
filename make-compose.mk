@@ -1,7 +1,7 @@
 ASSERTS_PATH = "tmp/battle_asserts"
 
 compose:
-	docker-compose up
+	docker-compose up app
 
 compose-build:
 	docker-compose build
@@ -9,11 +9,11 @@ compose-build:
 compose-down:
 	docker-compose down -v || true
 
-compose-test-all:
-	docker-compose run app mix test
+compose-test-code-checkers:
+	docker-compose run app mix test test/code_check
 
 compose-test:
-	docker-compose run app mix test test/codebattle test/codebattle_web
+	docker-compose run app mix test --exclude code_check
 
 compose-kill:
 	docker-compose kill
@@ -36,11 +36,14 @@ compose-db-init:
 	docker-compose run app mix ecto.migrate
 	docker-compose run app mix run priv/repo/seeds.exs
 
-compose-db-prepare: compose-db-init compose-upload-asserts
+compose-db-prepare: compose-db-init
 	docker-compose run app mix dockers.pull
 
 compose-credo:
 	docker-compose run app mix credo
+
+compose-credo-full:
+	docker-compose run app mix credo -a
 
 compose-console:
 	docker-compose run app iex -S mix

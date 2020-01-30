@@ -56,7 +56,7 @@ defmodule CodebattleWeb.GameChannelTest do
       payload: ^payload
     }
 
-    fsm = Server.fsm(game.id)
+    {:ok, fsm} = Server.fsm(game.id)
 
     assert fsm.state == :rematch_in_approval
   end
@@ -97,7 +97,7 @@ defmodule CodebattleWeb.GameChannelTest do
       payload: ^payload
     }
 
-    fsm = Server.fsm(game.id)
+    {:ok, fsm} = Server.fsm(game.id)
 
     assert fsm.state == :rematch_rejected
   end
@@ -139,7 +139,7 @@ defmodule CodebattleWeb.GameChannelTest do
       payload: ^payload
     }
 
-    fsm = Server.fsm(game.id + 1)
+    {:ok, fsm} = Server.fsm(game.id + 1)
 
     assert fsm.state == :playing
   end
@@ -182,15 +182,15 @@ defmodule CodebattleWeb.GameChannelTest do
       payload: ^payload
     }
 
-    fsm = Server.fsm(game.id + 1)
+    {:ok, fsm} = Server.fsm(game.id + 1)
 
     assert fsm.state == :playing
   end
 
-  test "sends game info when user join", %{user1: user1, socket1: socket1, game: game} do
+  test "sends game info when user join", %{user1: user1, socket1: socket1} do
     # setup
     state = :waiting_opponent
-    data = %{players: [Player.build(user1), %Player{}], task: game.task}
+    data = %{players: [Player.build(user1), %Player{}]}
     game = setup_game(state, data)
     game_topic = "game:" <> to_string(game.id)
 
@@ -206,6 +206,7 @@ defmodule CodebattleWeb.GameChannelTest do
                "starts_at" => TimeHelper.utc_now(),
                "status" => "waiting_opponent",
                "task" => game.task,
+               "tournament_id" => nil,
                "type" => "public",
                "timeout_seconds" => 0,
                "rematch_state" => "none",
@@ -356,7 +357,7 @@ defmodule CodebattleWeb.GameChannelTest do
 
     message = "#{user1.name} gave up!"
     :timer.sleep(100)
-    fsm = Server.fsm(game.id)
+    {:ok, fsm} = Server.fsm(game.id)
     players = FsmHelpers.get_players(fsm)
 
     payload = %{
@@ -371,7 +372,7 @@ defmodule CodebattleWeb.GameChannelTest do
       payload: ^payload
     }
 
-    fsm = Server.fsm(game.id)
+    {:ok, fsm} = Server.fsm(game.id)
 
     assert fsm.state == :game_over
     assert FsmHelpers.gave_up?(fsm, user1.id) == true

@@ -6,8 +6,6 @@ defmodule Codebattle.CodeCheck.Php.IntegrationTest do
   alias CodebattleWeb.UserSocket
 
   setup do
-    timeout = Application.fetch_env!(:codebattle, :code_check_timeout)
-
     user1 = insert(:user)
     user2 = insert(:user)
 
@@ -22,18 +20,17 @@ defmodule Codebattle.CodeCheck.Php.IntegrationTest do
        user2: user2,
        task: task,
        socket1: socket1,
-       socket2: socket2,
-       timeout: timeout
+       socket2: socket2
      }}
   end
 
+  @tag :code_check
   test "error code, game playing", %{
     user1: user1,
     user2: user2,
     task: task,
     socket1: socket1,
-    socket2: socket2,
-    timeout: timeout
+    socket2: socket2
   } do
     # setup
     state = :playing
@@ -51,7 +48,8 @@ defmodule Codebattle.CodeCheck.Php.IntegrationTest do
     Mix.Shell.Process.flush()
 
     Phoenix.ChannelTest.push(socket1, "check_result", %{editor_text: "sdf();", lang: "php"})
-    :timer.sleep(timeout)
+
+    assert_code_check()
 
     assert_receive %Phoenix.Socket.Broadcast{
       payload: %{result: result, output: output}
@@ -60,23 +58,23 @@ defmodule Codebattle.CodeCheck.Php.IntegrationTest do
     expected_result = %{
       "status" => "error",
       "result" =>
-        "Uncaught Error: Call to undefined function solution() in /usr/src/app/checker.php:40"
+        "Uncaught Error: Call to undefined function solution() in /usr/src/app/check/checker.php:53"
     }
 
     assert expected_result == Jason.decode!(result)
 
-    fsm = Server.fsm(game.id)
+    {:ok, fsm} = Server.fsm(game.id)
 
     assert fsm.state == :playing
   end
 
+  @tag :code_check
   test "failure code, game playing", %{
     user1: user1,
     user2: user2,
     task: task,
     socket1: socket1,
-    socket2: socket2,
-    timeout: timeout
+    socket2: socket2
   } do
     # setup
     state = :playing
@@ -98,28 +96,28 @@ defmodule Codebattle.CodeCheck.Php.IntegrationTest do
       lang: "php"
     })
 
-    :timer.sleep(timeout)
+    assert_code_check()
 
     assert_receive %Phoenix.Socket.Broadcast{
       payload: %{result: result, output: output}
     }
 
-    expected_result = %{"status" => "failure", "result" => [1, 1]}
+    expected_result = %{"status" => "failure", "result" => 1, "arguments" => [1, 1]}
 
     assert expected_result == Jason.decode!(result)
 
-    fsm = Server.fsm(game.id)
+    {:ok, fsm} = Server.fsm(game.id)
 
     assert fsm.state == :playing
   end
 
+  @tag :code_check
   test "good code, player won", %{
     user1: user1,
     user2: user2,
     task: task,
     socket1: socket1,
-    socket2: socket2,
-    timeout: timeout
+    socket2: socket2
   } do
     # setup
     state = :playing
@@ -144,9 +142,9 @@ defmodule Codebattle.CodeCheck.Php.IntegrationTest do
       lang: "php"
     })
 
-    :timer.sleep(timeout)
+    assert_code_check()
 
-    fsm = Server.fsm(game.id)
+    {:ok, fsm} = Server.fsm(game.id)
     assert fsm.state == :game_over
   end
 end

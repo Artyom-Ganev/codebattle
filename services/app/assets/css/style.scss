@@ -1,21 +1,18 @@
-$link-color: #1f3754;
-$link-hover-color: #5673ce;
-$link-hover-decoration: none;
 $body-bg: #fafafa;
 
-$gray-600: #477591 !default;
 $green: #64b079 !default;
 
-$secondary: $gray-600 !default;
+$secondary: #477591 !default;
 $success: $green !default;
 
-$box-shadow-sm: 0 2px 4px rgba(0,0,0,0.18);
+@import "../../deps/phoenix_live_view/assets/css/live_view.css";
+$box-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.18);
 @import "fonts";
 $font-family-sans-serif: "Roboto", sans-serif;
 @import "~bootstrap/scss/bootstrap";
 $fa-font-path: "/fonts";
 @import "~font-mfizz/dist/font-mfizz.css";
-@import "~react-pagination-library/build/css/index.css";
+@import "tournaments.css";
 
 a {
   transition: color ease-in 0.1s;
@@ -37,43 +34,42 @@ a {
   height: 100%;
 }
 
-
 .react-calendar-heatmap {
   .color-huge {
-      fill: #1e6823;
+    fill: #1e6823;
   }
   .color-huge:hover {
     fill: #0e5813;
   }
   .color-large {
-      fill: #44a340;
+    fill: #44a340;
   }
   .color-large:hover {
-      fill: #349330;
+    fill: #349330;
   }
   .color-small {
-      fill: #d6e685;
+    fill: #d6e685;
   }
   .color-small:hover {
-      fill: #c6d675;
+    fill: #c6d675;
   }
   .color-empty {
-      fill: #eee;
+    fill: #eee;
   }
   .color-empty:hover {
     fill: #ccc;
   }
 }
 .react-calendar-heatmap rect:hover {
-    stroke: #555;
-    stroke-width: 1px;
+  stroke: #555;
+  stroke-width: 1px;
 }
 .react-calendar-heatmap {
-    font-size: 8px;
+  font-size: 8px;
 }
 .x-username-td {
-    max-width: 350px;
-    overflow: hidden;
+  max-width: 350px;
+  overflow: hidden;
 }
 
 .toast-container {
@@ -84,11 +80,11 @@ a {
 .polyglot {
   width: 50px;
   height: 50px;
-  background: url('/assets/images/achievements/polyglot.png');
+  background: url("/assets/images/achievements/polyglot.png");
   background-size: cover;
   padding: 5px;
 }
-.profile .polyglot{
+.profile .polyglot {
   width: 200px;
   height: 200px;
   padding: 12px;
@@ -96,4 +92,20 @@ a {
 
 .fa-hidden {
   color: transparent;
+}
+
+.x-user-avatar {
+  width: 25px;
+}
+
+.bg-gray {
+  background-color: #dedede !important;
+}
+
+.x-rounded-bottom-right {
+  border-bottom-right-radius: $border-radius !important;
+}
+
+.x-rounded-bottom-left {
+  border-bottom-left-radius: $border-radius !important;
 }

@@ -19,15 +19,17 @@
 
 ## Разработка
 
+1. Если у вас нет SSH-ключей, сгенерируйте их и подключите к гитхабу, чтобы работать с репозиторием по SSH: https://help.github.com/en/github/authenticating-to-github/adding-a-new-ssh-key-to-your-github-account
+
 1. Ознакомьтесь с [принципами разработки](https://github.com/hexlet-codebattle/codebattle/wiki/%D0%9F%D1%80%D0%B8%D0%BD%D1%86%D0%B8%D0%BF%D1%8B-%D1%80%D0%B0%D0%B7%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%BA%D0%B8) принятыми в этом проекте.
 
 1. Сделайте fork проекта (кнопка fork в правом верхнем углу на странице <https://github.com/hexlet-codebattle/codebattle>) и клонируйте репозиторий:
 
     ```bash
-    git clone https://github.com/%your-username%/codebattle.git
+    git clone git@github.com:%your-username%/codebattle.git
     ```
 
-1. Следуйте [инструкциям по установке](https://github.com/hexlet-codebattle/codebattle/wiki/%D0%A3%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D1%82%D0%B5%D1%81%D1%82%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D0%BF%D1%80%D0%BE%D0%B5%D0%BA%D1%82%D0%B0).
+1. Следуйте [инструкциям по установке](https://github.com/hexlet-codebattle/codebattle/blob/master/README.md#install).
 
 1. Перед тем как начать писать код, необходимо создать ветку для разработки из ветки `master`. Важно учитывать, что в одной ветке может находиться решение только одной задачи!
 
@@ -43,9 +45,7 @@
     git push --set-upstream origin %your_branch_name%
     ```
 
-    Демонстрация [на видео](https://asciinema.org/a/0oyNHtP5VxxBUWBnncPG3knQv).
-
-1. Создайте pull request.
+1. Создайте `pull request`.
 
 ## Создание pull request
 
@@ -56,14 +56,13 @@
 * Скорее всего гитхаб сам предложит вам создать PR, тем не менее, стоит заглянуть [сюда](https://help.github.com/articles/creating-a-pull-request)
 * Не забываем в комментарии к PR [ссылаться на issue](https://help.github.com/articles/closing-issues-using-keywords)
 
-После завершения работы над задачей не забудьте [синхронизировать ваш fork с основным репозиторием.](https://help.github.com/articles/syncing-a-fork/)
-Демонстрация [на видео](https://asciinema.org/a/kbpBMdJBRLDrI1wzhBsbb1yGX).
-
-Если локально ваша ветка называется `master` (по умолчанию это так), то вы можете ввести команду,
-которая повторит ровно всё то, что вы могли увидеть по 2 ссылкам выше:
+После завершения работы над задачей не забудьте [синхронизировать ваш fork с основным репозиторием](https://help.github.com/articles/syncing-a-fork/).
 
 ```bash
-make get-last-changes
+    git remote add upstream git@github.com:hexlet-codebattle/codebattle.git
+    git fetch upstream
+    git checkout master
+    git merge upstream/master
 ```
 
 [Подробные инструкции по работе с PR](https://help.github.com/categories/collaborating-with-issues-and-pull-requests)

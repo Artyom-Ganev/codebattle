@@ -6,8 +6,14 @@
 use Mix.Config
 
 config :codebattle,
-  alpine_docker_command_template: "docker run --rm ~s ~s timeout -s 9 -t 10 make --silent test",
-  ubuntu_docker_command_template: "docker run --rm ~s ~s timeout -s 9 10s make --silent test"
+  alpine_docker_command_template:
+    "docker run --rm --net none ~s ~s timeout -s 9 -t 10 make --silent test",
+  ubuntu_docker_command_template:
+    "docker run --rm --net none ~s ~s timeout -s 9 10s make --silent test",
+  alpine_docker_command_compile_template:
+    "docker run --net none ~s ~s timeout -s 9 -t 10 make --silent test-compile",
+  ubuntu_docker_command_compile_template:
+    "docker run --net none ~s ~s timeout -s 9 10s make --silent test-compile"
 
 # General application configuration
 config :codebattle, ecto_repos: [Codebattle.Repo]
@@ -26,13 +32,14 @@ config :logger, :console,
 
 config :phoenix, :template_engines,
   slim: PhoenixSlime.Engine,
-  slime: PhoenixSlime.Engine
+  slime: PhoenixSlime.Engine,
+  slimleex: PhoenixSlime.LiveViewEngine
 
 config :phoenix_slime, :use_slim_extension, true
 
 config :ueberauth, Ueberauth,
   providers: [
-    github: {Ueberauth.Strategy.Github, [default_scope: "user:email"]}
+    github: {Ueberauth.Strategy.Github, [default_scope: "user:email", send_redirect_uri: false]}
   ]
 
 config :ueberauth, Ueberauth.Strategy.Github.OAuth,
@@ -50,7 +57,21 @@ config :one_signal, OneSignal,
 config :scrivener_html,
   routes_helper: CodebattleWeb.Router.Helpers
 
-config :codebattle, Codebattle.Bot.PlaybookPlayerRunner, timeout: 7_000
+config :codebattle, CodebattleWeb.Endpoint, live_view: [signing_salt: "asdfasdf"]
+
+config :codebattle, Codebattle.Bot.PlaybookPlayerRunner, timeout: 2_000
+
+bot_limit =
+  case System.get_env("CODEBATTLE_BOT_TIME_SLEEP_LIMIT") do
+    nil -> 7_000
+    x -> Integer.parse(x) |> elem(0)
+  end
+
+config :codebattle, Codebattle.Bot.RecorderServer, limit: bot_limit
+config :codebattle, checker_adapter: Codebattle.CodeCheck.Checker
+config :codebattle, tournament_match_timeout: 3 * 60
+# 3 hours in seconds
+config :codebattle, default_timeout: 10_800
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
